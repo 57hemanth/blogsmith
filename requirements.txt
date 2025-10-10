@@ -1,0 +1,6 @@
+langgraph
+langchain_google_genai
+aiohttp
+beautifulsoup4
+python-dotenv
+google-cloud-aiplatform
