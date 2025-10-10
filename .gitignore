@@ -9,3 +9,14 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 service-account.json
+
+# LangGraph Studio
+checkpoints.db
+*.db
+*.db-shm
+*.db-wal
+
+# Generated content
+generated_blog*.md
+generated_images/
+.langgraph_api

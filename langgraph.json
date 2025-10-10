@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "blog_writer": "./graphs/blog_writer.py:graph"
+  },
+  "env": ".env"
+}
+

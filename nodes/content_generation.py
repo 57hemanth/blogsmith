@@ -1,11 +1,17 @@
 from states import BlogState
 from typing import Dict, Any
 from config import llm
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def content_generation_node(state: BlogState) -> Dict[str, Any]:
     """
     Generate the full blog content.
     """
+    logger.info("✍️  Starting content generation...")
+    logger.info(f"   Title: {state['selected_title']}")
+    logger.info("   This may take 30-60 seconds...")
     
     prompt = f"""
     Write a comprehensive, high-quality blog post.
@@ -13,11 +19,11 @@ async def content_generation_node(state: BlogState) -> Dict[str, Any]:
     Title: {state["selected_title"]}
     
     Outline:
-    {state["blog_outline"]}
+    {state.get("blog_outline", "")}
     
     Context:
     - Website: {state["site_title"]} - {state["site_description"]}
-    - Target Keywords: {", ".join(state["keywords"])}
+    - Target Keywords: {", ".join(state.get("keywords", []))}
     - Competitor Insights: {state.get("competitor_summary", "")}
     
     Requirements:
@@ -37,6 +43,9 @@ async def content_generation_node(state: BlogState) -> Dict[str, Any]:
         {"role": "system", "content": "You are an expert content writer specializing in engaging, SEO-optimized blog posts."},
         {"role": "user", "content": prompt}
     ])
+    
+    word_count = len(response.content.split())
+    logger.info(f"✅ Content generated: {word_count} words, {len(response.content)} characters")
     
     return {
         "blog_content": response.content,

@@ -1,6 +1,10 @@
 langgraph
+langgraph-cli
+langgraph-checkpoint-sqlite
 langchain_google_genai
+langchain-core
 aiohttp
 beautifulsoup4
 python-dotenv
 google-cloud-aiplatform
+Pillow

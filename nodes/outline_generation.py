@@ -1,19 +1,23 @@
 from states import BlogState
 from typing import Dict, Any
 from config import llm
-import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def outline_generation_node(state: BlogState) -> Dict[str, Any]:
     """
     Generate a structured outline before writing full content.
     This improves content quality significantly.
     """
+    logger.info("📋 Starting outline generation...")
+    logger.info(f"   Title: {state['selected_title']}")
     
     prompt = f"""
     Create a detailed blog outline for: "{state["selected_title"]}"
     
     Website Context: {state["site_description"]}
-    Target Keywords: {", ".join(state["keywords"][:5])}
+    Target Keywords: {", ".join(state.get("keywords", [])[:5])}
     
     Competitor Insights:
     {state.get("competitor_summary", "")}
@@ -31,6 +35,8 @@ async def outline_generation_node(state: BlogState) -> Dict[str, Any]:
         {"role": "system", "content": "You are a professional content strategist."},
         {"role": "user", "content": prompt}
     ])
+    
+    logger.info(f"✅ Outline generated ({len(response.content)} characters)")
     
     return {
         "blog_outline": response.content,
