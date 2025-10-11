@@ -6,5 +6,5 @@ langchain-core
 aiohttp
 beautifulsoup4
 python-dotenv
-google-cloud-aiplatform
+google-genai
 Pillow
