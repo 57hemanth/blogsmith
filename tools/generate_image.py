@@ -6,13 +6,20 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-async def generate_image(prompt: str) -> str:
+async def generate_image(prompt: str, return_bytes: bool = False) -> str | bytes:
     """
     Generate an image using Google's Gemini 2.5 Flash Image model.
+    
+    Args:
+        prompt: The image generation prompt
+        return_bytes: If True, return bytes instead of saving to file
     
     Required environment variables:
     - GOOGLE_API_KEY: Your Google API key (or GOOGLE_CLOUD_PROJECT for Vertex AI)
     - GOOGLE_CLOUD_PROJECT: Your GCP project ID (optional, for Vertex AI)
+    
+    Returns:
+        Either the file path (str) if return_bytes=False, or image bytes (bytes) if return_bytes=True
     """
     try:
         # Get configuration from environment
@@ -69,11 +76,14 @@ async def generate_image(prompt: str) -> str:
         
         logger.info("Image generated successfully")
         
-        # Create output directory
+        # Return bytes if requested (for R2 upload)
+        if return_bytes:
+            return image_data
+        
+        # Otherwise save to local file
         output_dir = "generated_images"
         os.makedirs(output_dir, exist_ok=True)
         
-        # Create filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_file = os.path.join(output_dir, f"blog_image_{timestamp}.png")
         
@@ -96,7 +106,7 @@ async def generate_image(prompt: str) -> str:
             return abs_path
         else:
             raise FileNotFoundError(f"Image file was not created at {output_file}")
-        
+
     except ValueError as e:
         # Configuration errors
         logger.error(f"Configuration error: {str(e)}")

@@ -1,22 +1,60 @@
-venv/
-__pycache__/
+# Environment variables
 .env
-.venv/
-.DS_Store
-.vscode/
-.idea/
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-service-account.json
+.env.local
 
-# LangGraph Studio
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# LangGraph
 checkpoints.db
-*.db
-*.db-shm
-*.db-wal
+checkpoints.db-shm
+checkpoints.db-wal
 
 # Generated content
-generated_blog*.md
 generated_images/
+generated_blog_*.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Cloudflare Wrangler
+.wrangler/
+.dev.vars
+
+# Docker
+.dockerignore
+wrangler.jsonc
 .langgraph_api

@@ -2,13 +2,15 @@ from states import BlogState
 from typing import Dict, Any
 from config import llm
 from tools import generate_image
+from tools.r2_upload import upload_image_to_r2
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
 async def image_generation_node(state: BlogState) -> Dict[str, Any]:
     """
-    Generate a featured image for the blog.
+    Generate a featured image for the blog and upload to R2.
     """
     logger.info("🖼️  Starting featured image generation...")
     
@@ -38,8 +40,28 @@ async def image_generation_node(state: BlogState) -> Dict[str, Any]:
         # Generate the image
         logger.info("   Generating image with AI...")
         try:
-            image_url = await generate_image(image_prompt)
-            logger.info(f"✅ Image generated successfully: {image_url}")
+            # Get image data as bytes
+            image_data = await generate_image(image_prompt, return_bytes=True)
+            
+            # Check if running in production with R2 configured
+            if os.getenv('R2_ACCESS_KEY_ID'):
+                logger.info("   Uploading to R2 storage...")
+                image_url = await upload_image_to_r2(image_data)
+            else:
+                # Fallback to local storage for development
+                logger.warning("   R2 not configured, saving locally...")
+                from datetime import datetime
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                output_dir = "generated_images"
+                os.makedirs(output_dir, exist_ok=True)
+                output_file = os.path.join(output_dir, f"blog_image_{timestamp}.png")
+                
+                with open(output_file, 'wb') as f:
+                    f.write(image_data)
+                
+                image_url = os.path.abspath(output_file)
+            
+            logger.info(f"✅ Image generated and stored: {image_url}")
         except Exception as e:
             logger.error(f"❌ Image generation failed: {e}")
             image_url = ""
