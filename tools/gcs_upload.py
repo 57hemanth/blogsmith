@@ -70,11 +70,9 @@ async def upload_image_to_gcs(
             content_type='image/png'
         )
         
-        # Make the blob publicly accessible
-        blob.make_public()
-        
-        # Generate public URL
-        public_url = blob.public_url
+        # Generate public URL (works if bucket is public or has uniform bucket-level access)
+        # Format: https://storage.googleapis.com/bucket-name/object-name
+        public_url = f"https://storage.googleapis.com/{bucket_name}/{filename}"
         
         logger.info(f"✅ Image uploaded successfully: {public_url}")
         return public_url
@@ -83,10 +81,13 @@ async def upload_image_to_gcs(
         logger.error(f"❌ Failed to upload image to GCS: {e}")
         raise
 
-def setup_gcs_bucket_cors(bucket_name: str = None):
+def setup_gcs_bucket_public_access(bucket_name: str = None):
     """
-    Set up CORS policy for GCS bucket to allow web access to images.
+    Set up GCS bucket for public access with uniform bucket-level access.
     This is a utility function you can run once to configure your bucket.
+    
+    NOTE: This makes ALL objects in the bucket publicly readable.
+    Only use this for buckets dedicated to public assets like blog images.
     """
     try:
         client = create_gcs_client()
@@ -97,6 +98,18 @@ def setup_gcs_bucket_cors(bucket_name: str = None):
                 raise ValueError("GCS_BUCKET_NAME environment variable is required")
         
         bucket = client.bucket(bucket_name)
+        
+        # Set uniform bucket-level access (if not already enabled)
+        bucket.iam_configuration.uniform_bucket_level_access_enabled = True
+        
+        # Set bucket to be publicly readable
+        from google.cloud.storage import Policy
+        policy = bucket.get_iam_policy(requested_policy_version=3)
+        policy.bindings.append({
+            "role": "roles/storage.objectViewer",
+            "members": {"allUsers"}
+        })
+        bucket.set_iam_policy(policy)
         
         # Set CORS policy
         bucket.cors = [
@@ -109,8 +122,58 @@ def setup_gcs_bucket_cors(bucket_name: str = None):
         ]
         bucket.patch()
         
-        logger.info(f"✅ CORS policy set for bucket: {bucket_name}")
+        logger.info(f"✅ Bucket configured for public access: {bucket_name}")
+        logger.info("   - Uniform bucket-level access enabled")
+        logger.info("   - Public read access granted")
+        logger.info("   - CORS policy set")
         
     except Exception as e:
-        logger.error(f"❌ Failed to set CORS policy: {e}")
+        logger.error(f"❌ Failed to configure bucket: {e}")
+        raise
+
+async def upload_image_to_gcs_signed(
+    image_data: bytes,
+    bucket_name: str = None,
+    filename: str = None,
+    expiration_hours: int = 24
+) -> str:
+    """
+    Alternative upload method using signed URLs for private buckets.
+    Returns a signed URL that expires after the specified hours.
+    """
+    try:
+        client = create_gcs_client()
+        
+        if bucket_name is None:
+            bucket_name = os.getenv('GCS_BUCKET_NAME')
+            if not bucket_name:
+                raise ValueError("GCS_BUCKET_NAME environment variable is required")
+        
+        bucket = client.bucket(bucket_name)
+        
+        if not filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            unique_id = str(uuid.uuid4())[:8]
+            filename = f"blog_images/{timestamp}_{unique_id}.png"
+        
+        logger.info(f"📤 Uploading image to GCS (private): gs://{bucket_name}/{filename}")
+        
+        blob = bucket.blob(filename)
+        blob.upload_from_string(
+            image_data,
+            content_type='image/png'
+        )
+        
+        # Generate signed URL for temporary access
+        from datetime import timedelta
+        signed_url = blob.generate_signed_url(
+            expiration=datetime.utcnow() + timedelta(hours=expiration_hours),
+            method='GET'
+        )
+        
+        logger.info(f"✅ Image uploaded with signed URL (expires in {expiration_hours}h)")
+        return signed_url
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to upload image with signed URL: {e}")
         raise
