@@ -64,8 +64,8 @@ async def generate_blog(request: BlogRequest):
             }
         }
         
-        # Run the graph
-        result = await graph.ainvoke(initial_state, config)
+        # Run the graph (without checkpointing for now)
+        result = await graph.ainvoke(initial_state)
         
         logger.info(f"✅ Blog generation complete: {result.get('selected_title')}")
         

@@ -59,9 +59,9 @@ def create_blog_writer_graph():
     workflow.add_edge("content_generation", "image_generation")
     workflow.add_edge("image_generation", END)
 
-    # Compile with SQLite checkpointer for persistence
-    checkpointer = SqliteSaver.from_conn_string("checkpoints.db")
-    return workflow.compile(checkpointer=checkpointer)
+    # Compile without checkpointer for now (to debug the GeneratorContextManager issue)
+    logger.info("🔧 Compiling graph without checkpointing for debugging")
+    return workflow.compile()
 
 
 # Export the compiled graph for LangGraph Studio
