@@ -2,7 +2,7 @@ from states import BlogState
 from typing import Dict, Any
 from config import llm
 from tools import generate_image
-from tools.r2_upload import upload_image_to_r2
+from tools.gcs_upload import upload_image_to_gcs
 import logging
 import os
 
@@ -43,13 +43,13 @@ async def image_generation_node(state: BlogState) -> Dict[str, Any]:
             # Get image data as bytes
             image_data = await generate_image(image_prompt, return_bytes=True)
             
-            # Check if running in production with R2 configured
-            if os.getenv('R2_ACCESS_KEY_ID'):
-                logger.info("   Uploading to R2 storage...")
-                image_url = await upload_image_to_r2(image_data)
+            # Check if running in production with GCS configured
+            if os.getenv('GCS_BUCKET_NAME'):
+                logger.info("   Uploading to Google Cloud Storage...")
+                image_url = await upload_image_to_gcs(image_data)
             else:
                 # Fallback to local storage for development
-                logger.warning("   R2 not configured, saving locally...")
+                logger.warning("   GCS not configured, saving locally...")
                 from datetime import datetime
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_dir = "generated_images"

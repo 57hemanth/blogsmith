@@ -12,3 +12,4 @@ fastapi
 uvicorn[standard]
 pydantic
 boto3
+google-cloud-storage
