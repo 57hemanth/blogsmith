@@ -58,3 +58,4 @@ Thumbs.db
 .dockerignore
 wrangler.jsonc
 .langgraph_api
+service-account.json

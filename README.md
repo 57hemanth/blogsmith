@@ -81,6 +81,25 @@ See [LANGGRAPH_STUDIO.md](./LANGGRAPH_STUDIO.md) for detailed Studio usage.
 python main.py
 ```
 
+### 5. Run with Docker
+
+The API server runs as a container on port 8080. Ensure you have a `.env` file in the project root (see Configuration).
+
+```bash
+# Build the image
+docker build -t blogsmith .
+
+# Run the container (pass env from .env)
+docker run --rm -p 8080:8080 --env-file .env blogsmith
+```
+
+- **API:** `http://localhost:8080`
+- **Docs:** `http://localhost:8080/docs`
+- **Run in background:** add `-d` to `docker run`
+- **Custom env vars:** use `-e KEY=value` or keep using `--env-file .env`
+
+For GCS image uploads, set `GCS_BUCKET_NAME` and `GOOGLE_APPLICATION_CREDENTIALS` in `.env` (or mount the credentials file and set the path inside the container).
+
 ## Project Structure
 
 ```
@@ -267,9 +286,20 @@ LangGraph Studio provides:
 
 ### Environment Variables
 
+Used by both local runs and Docker. Copy `.env.example` to `.env` and fill in values.
+
 ```env
-GOOGLE_API_KEY=your_key_here
+# LLM & image providers
+LLM_PROVIDER=openai
+IMAGE_PROVIDER=openai
 OPENAI_API_KEY=your_key_here
+# GOOGLE_API_KEY=your_key_here
+# GOOGLE_CLOUD_PROJECT=your_gcp_project_id
+
+# Optional: GCS image upload (Docker/production)
+# GCS_BUCKET_NAME=your-bucket-name
+# GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+
 LOG_LEVEL=INFO
 ```
 

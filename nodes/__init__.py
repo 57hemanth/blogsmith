@@ -4,4 +4,5 @@ from .title_generation import title_generation_node
 from .title_selection import title_selection_node
 from .outline_generation import outline_generation_node
 from .content_generation import content_generation_node
+from .seo_metadata import seo_metadata_node
 from .image_generation import image_generation_node

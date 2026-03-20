@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 import logging
 from graphs.blog_writer import graph
-from tools.r2_upload import upload_image_to_r2
 from datetime import datetime
 import os
 
@@ -23,6 +22,8 @@ class BlogRequest(BaseModel):
     site_description: str
     existing_blogs: List[Dict[str, str]] = []
     competitors_urls: List[str] = []
+    target_keyword: str = ""
+    secondary_keywords: List[str] = []
     thread_id: Optional[str] = None
 
 class BlogResponse(BaseModel):
@@ -31,6 +32,10 @@ class BlogResponse(BaseModel):
     content: Optional[str] = None
     featured_image: Optional[str] = None
     keywords: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
+    meta_description: Optional[str] = None
+    url_slug: Optional[str] = None
+    image_alt_text: Optional[str] = None
     error: Optional[str] = None
 
 @app.get("/health")
@@ -44,8 +49,8 @@ async def generate_blog(request: BlogRequest):
     Generate a blog post with AI
     """
     try:
-        logger.info(f"🚀 Starting blog generation for: {request.site_title}")
-        
+        logger.info(f"Starting blog generation for: {request.site_title}")
+
         # Prepare initial state
         initial_state = {
             "site_url": request.site_url,
@@ -53,32 +58,30 @@ async def generate_blog(request: BlogRequest):
             "site_description": request.site_description,
             "existing_blogs": request.existing_blogs,
             "competitors_urls": request.competitors_urls,
+            "target_keyword": request.target_keyword,
+            "secondary_keywords": request.secondary_keywords,
             "messages": []
         }
-        
-        # Configure with thread ID
-        thread_id = request.thread_id or f"blog_run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        config = {
-            "configurable": {
-                "thread_id": thread_id
-            }
-        }
-        
-        # Run the graph (without checkpointing for now)
+
+        # Run the graph
         result = await graph.ainvoke(initial_state)
-        
-        logger.info(f"✅ Blog generation complete: {result.get('selected_title')}")
-        
+
+        logger.info(f"Blog generation complete: {result.get('selected_title')}")
+
         return BlogResponse(
             success=True,
             title=result.get("selected_title"),
             content=result.get("blog_content"),
             featured_image=result.get("featured_image"),
-            keywords=result.get("keywords", [])
+            keywords=result.get("keywords", []),
+            tags=result.get("tags", []),
+            meta_description=result.get("meta_description"),
+            url_slug=result.get("url_slug"),
+            image_alt_text=result.get("image_alt_text"),
         )
-        
+
     except Exception as e:
-        logger.error(f"❌ Error generating blog: {e}", exc_info=True)
+        logger.error(f"Error generating blog: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")

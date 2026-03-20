@@ -1,5 +1,3 @@
-from config import llm
-
 async def summarize_content(llm, content: str) -> str:
     """
     Summarize article content using LLM.
