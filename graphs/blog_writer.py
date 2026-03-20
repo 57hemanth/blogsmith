@@ -13,6 +13,7 @@ from nodes import (
 )
 from typing import List, Dict, Literal
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,7 @@ async def run_blog_writer(
         "messages": []
     }
 
-    result = await graph.ainvoke(initial_state)
+    config = {"configurable": {"thread_id": f"run_{uuid.uuid4().hex}"}}
+    result = await graph.ainvoke(initial_state, config)
 
     return result

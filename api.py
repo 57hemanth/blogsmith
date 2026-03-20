@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import logging
+import uuid
 from graphs.blog_writer import graph
 from datetime import datetime
 import os
@@ -63,8 +64,11 @@ async def generate_blog(request: BlogRequest):
             "messages": []
         }
 
-        # Run the graph
-        result = await graph.ainvoke(initial_state)
+        thread_id = request.thread_id or f"api_{uuid.uuid4().hex}"
+        config = {"configurable": {"thread_id": thread_id}}
+
+        # Checkpointer (InMemorySaver) requires configurable.thread_id
+        result = await graph.ainvoke(initial_state, config)
 
         logger.info(f"Blog generation complete: {result.get('selected_title')}")
 
